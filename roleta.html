@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<title>Roleta Cassino</title>
+
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  background: radial-gradient(circle, #0b3d2e, #06251c);
+  color: white;
+  padding-bottom: 100px;
+}
+
+h1 {
+  font-size: 20px;
+}
+
+#container {
+  margin-top: 70px;
+  display: flex;
+  justify-content: center;
+}
+
+.bola {
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 250px;
+  font-weight: bold;
+  color: white;
+  box-shadow: 
+    0 0 50px rgba(255,0,0,0.5),
+    inset -10px -10px 20px rgba(0,0,0,0.6);
+}
+
+.vermelho {
+  background: radial-gradient(circle at 50% 50%, #f96868, #b30000);
+}
+
+.preto {
+  background: radial-gradient(circle at 30% 30%, #686868, #000);
+}
+
+/* BRILHO bola */
+.brilho {
+  animation: brilhoPulse 0.8s ease-in-out 3;
+}
+
+@keyframes brilhoPulse {
+  0% {
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+  }
+  50% {
+    box-shadow: 0 0 60px rgba(255,255,255,0.9);
+  }
+  100% {
+    box-shadow: 0 0 10px rgba(255,255,255,0.3);
+  }
+}  
+  
+#tempo {
+  margin-top: 130px;
+  margin-botton: 70px;
+  font-size: 60px;
+  font-weight: bold;
+}
+
+.controles {
+  margin-top: 70px;
+  margin-botton: 70px;
+  font-size: 50px;
+}
+
+input {
+  width: 180px;
+  padding: 15px;
+  font-size: 35px;
+  text-align: center;
+  border-radius: 12px;
+  border: none;
+  margin: 10px;
+}
+
+.controles button {
+  font-size: 35px;
+  padding: 15px 30px;
+  margin: 20px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+#resumo {
+  margin-top: 40px;
+  font-size: 55px;
+  font-weight: bold;
+}
+
+.btn {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 500px;
+  font-size: 90px;
+  font-weight: bold;
+  border: none;
+  background: gold;
+  cursor: pointer;
+}
+
+.btn.segurar {
+  background: red !important;
+}
+
+.btn:active {
+  background: #d4af37;
+}
+</style>
+</head>
+
+<body>
+
+<h1> </h1>
+
+<div id="container">
+  <div id="bola" class="bola">-</div>
+</div>
+
+<div id="tempo">Tempo de jogo: 00:00</div>
+
+<div class="controles">
+  💰 Inicial: <input id="valorInicial" type="number" placeholder="0">
+  💰 Final: <input id="valorFinal" type="number" placeholder="0"><br>
+
+  <button onclick="toggleTempo()">⏸️ Pausar / Continuar</button>
+  <button onclick="encerrar()">🧾 Encerramento</button>
+</div>
+
+<div id="resumo"></div>
+
+<button class="btn">Girar 🎰</button>
+
+<script>
+let girando = false;
+let segundos = 0;
+let pausado = true;
+let iniciou = false;
+
+const vermelhos = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
+
+function cor(num) {
+  return vermelhos.includes(num) ? "vermelho" : "preto";
+}
+
+/* GIRO */
+function girar() {
+  if (girando) return;
+  girando = true;
+
+  // 👇 inicia tempo só no primeiro giro
+  if (!iniciou) {
+    iniciou = true;
+    pausado = false;
+  }
+
+  let bola = document.getElementById("bola");
+  let final = Math.floor(Math.random() * 36) + 1;
+
+  let tempo = 0;
+
+  let intervalo = setInterval(() => {
+    let temp = Math.floor(Math.random() * 36) + 1;
+
+    bola.innerText = temp;
+    bola.className = "bola " + cor(temp);
+
+    tempo++;
+
+      if (tempo > 20) {
+        clearInterval(intervalo);
+      
+        bola.innerText = final;
+        bola.className = "bola " + cor(final);
+      
+        // ✨ BRILHO AQUI
+        bola.classList.add("brilho");
+      
+        setTimeout(() => {
+          bola.classList.remove("brilho");
+        }, 2500);
+      
+        girando = false;
+      }
+
+  }, 60);
+}
+
+/* TEMPO */
+function atualizarTempo() {
+  if (pausado || !iniciou) return;
+
+  segundos++;
+
+  let min = Math.floor(segundos / 60);
+  let sec = segundos % 60;
+
+  document.getElementById("tempo").innerText =
+    "Tempo de jogo: " +
+    String(min).padStart(2, '0') + ":" +
+    String(sec).padStart(2, '0');
+}
+
+setInterval(atualizarTempo, 1000);
+
+/* PAUSA */
+function toggleTempo() {
+  pausado = !pausado;
+}
+
+/* ENCERRAMENTO */
+function encerrar() {
+  let inicial = parseFloat(document.getElementById("valorInicial").value) || 0;
+  let final = parseFloat(document.getElementById("valorFinal").value) || 0;
+
+  let resultado = final - inicial;
+
+  let min = Math.floor(segundos / 60);
+  let sec = segundos % 60;
+
+  let texto = "";
+
+  if (resultado > 0) {
+    texto = `🟢 Em ${min}m ${sec}s você GANHOU R$ ${resultado.toFixed(2)}`;
+    resumo.style.color = "lightgreen";
+  } else if (resultado < 0) {
+    texto = `🔴 Em ${min}m ${sec}s você PERDEU R$ ${Math.abs(resultado).toFixed(2)}`;
+    resumo.style.color = "red";
+  } else {
+    texto = `⚪ Em ${min}m ${sec}s você EMPATOU`;
+    resumo.style.color = "white";
+  }
+
+  resumo.innerText = texto;
+
+  // 👇 zera e pausa
+  segundos = 0;
+  pausado = true;
+  iniciou = false;
+
+  document.getElementById("tempo").innerText = "Tempo de jogo: 00:00";
+}
+
+/* RESET TOTAL */
+function resetarTudo() {
+  segundos = 0;
+  pausado = true;
+  iniciou = false;
+
+  document.getElementById("tempo").innerText = "Tempo de jogo: 00:00";
+
+  document.getElementById("bola").innerText = "-";
+  document.getElementById("bola").className = "bola";
+
+  document.getElementById("valorInicial").value = "";
+  document.getElementById("valorFinal").value = "";
+  document.getElementById("resumo").innerText = "";
+
+  girando = false;
+}
+
+/* SERVICE WORKER */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+/* LONG PRESS */
+const botao = document.querySelector(".btn");
+
+let tempoPressionado = null;
+let segurando = false;
+
+botao.addEventListener("pointerdown", () => {
+  segurando = false;
+  botao.classList.add("segurar");
+
+  tempoPressionado = setTimeout(() => {
+    segurando = true;
+    resetarTudo();
+  }, 2000);
+});
+
+botao.addEventListener("pointerup", () => {
+  clearTimeout(tempoPressionado);
+  botao.classList.remove("segurar");
+
+  if (!segurando) {
+    girar();
+  }
+});
+
+botao.addEventListener("pointerleave", () => {
+  clearTimeout(tempoPressionado);
+  botao.classList.remove("segurar");
+});
+</script>
+
+</body>
+</html>

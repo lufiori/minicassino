@@ -1,6 +1,6 @@
 {
-  "name": "roleta",
-  "short_name": "roleta",
+  "name": "minicassino",
+  "short_name": "minicassino",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#06251c",

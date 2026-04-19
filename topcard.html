@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<title>Sorteador</title>
+
+<style>
+body {
+  font-family: Arial;
+  text-align: center;
+  margin-top: 20px;
+  background: #f5f5f5;
+  padding-bottom: 260px;
+}
+
+h1 { font-size: 80px; }
+
+.range { font-size: 60px; }
+
+input {
+  width: 180px;
+  padding: 20px;
+  font-size: 40px;
+  text-align: center;
+  border-radius: 15px;
+  border: 2px solid #ccc;
+  margin: 10px;
+}
+
+#resultado {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+}
+
+.forma {
+  width: 380px;
+  height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 300px;
+  font-weight: bold;
+  color: white;
+  border-radius: 40px;
+}
+
+/* CORES */
+.par { background: blue; }
+.impar { background: green; }
+
+/* BRILHO */
+.brilho {
+  animation: brilhoPulse 0.8s ease-in-out 3;
+}
+
+@keyframes brilhoPulse {
+  0% { box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+  50% { box-shadow: 0 0 60px rgba(255,255,255,0.9); }
+  100% { box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+}
+
+#tempo {
+  margin-top: 80px;
+  font-size: 50px;
+  font-weight: bold;
+}
+
+.controles {
+  margin-top: 40px;
+  font-size: 50px;
+}
+
+.controles button {
+  font-size: 40px;
+  padding: 20px 40px;
+  margin: 15px;
+  border-radius: 15px;
+  border: none;
+  cursor: pointer;
+}
+
+#resumo {
+  margin-top: 30px;
+  font-size: 60px;
+  font-weight: bold;
+}
+
+/* BOTÃO */
+.btn {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 550px;
+  font-size: 90px;
+  font-weight: bold;
+  border: none;
+  background: #333;
+  color: white;
+  cursor: pointer;
+}
+
+.btn.segurar { background: red !important; }
+.btn:active { background: #555; }
+</style>
+</head>
+
+<body>
+
+<h1>Top Card</h1>
+
+<div class="range">
+  De <input id="min" type="number" value="1">
+  até <input id="max" type="number" value="36">
+</div>
+
+<div id="resultado">
+  <div id="forma" class="forma">-</div>
+</div>
+
+<div id="tempo">Tempo de jogo: 00:00</div>
+
+<div class="controles">
+  💰 Inicial: <input id="valorInicial" type="number" placeholder="0">
+  💰 Final: <input id="valorFinal" type="number" placeholder="0"><br>
+
+  <button onclick="toggleTempo()">⏸️ Pausar / Continuar</button>
+  <button onclick="encerrar()">🧾 Encerramento</button>
+</div>
+
+<div id="resumo"></div>
+
+<button class="btn">SORTear</button>
+
+<script>
+let sorteando = false;
+let segundos = 0;
+let pausado = true;
+let iniciou = false;
+
+/* SORTEIO */
+function sortear() {
+  if (sorteando) return;
+  sorteando = true;
+
+  // 👇 começa o tempo no primeiro sorteio
+  if (!iniciou) {
+    iniciou = true;
+    pausado = false;
+  }
+
+  let min = parseInt(document.getElementById('min').value);
+  let max = parseInt(document.getElementById('max').value);
+
+  if (min > max) {
+    alert("O mínimo não pode ser maior que o máximo!");
+    sorteando = false;
+    return;
+  }
+
+  let forma = document.getElementById("forma");
+  let resultadoFinal = Math.floor(Math.random() * (max - min + 1)) + min;
+
+  let contador = 0;
+
+  let animacao = setInterval(() => {
+    let temp = Math.floor(Math.random() * (max - min + 1)) + min;
+
+    forma.innerText = temp;
+    forma.className = "forma " + (temp % 2 === 0 ? "par" : "impar");
+
+    contador++;
+
+    if (contador > 25) {
+      clearInterval(animacao);
+
+      forma.innerText = resultadoFinal;
+      forma.className = "forma " + (resultadoFinal % 2 === 0 ? "par" : "impar");
+
+      // ✨ brilho
+      forma.classList.add("brilho");
+      setTimeout(() => forma.classList.remove("brilho"), 2500);
+
+      sorteando = false;
+    }
+
+  }, 60);
+}
+
+/* TEMPO */
+function atualizarTempo() {
+  if (pausado || !iniciou) return;
+
+  segundos++;
+
+  let min = Math.floor(segundos / 60);
+  let sec = segundos % 60;
+
+  document.getElementById("tempo").innerText =
+    "Tempo de jogo: " +
+    String(min).padStart(2, '0') + ":" +
+    String(sec).padStart(2, '0');
+}
+
+setInterval(atualizarTempo, 1000);
+
+/* PAUSA */
+function toggleTempo() {
+  pausado = !pausado;
+}
+
+/* ENCERRAMENTO */
+function encerrar() {
+  let inicial = parseFloat(document.getElementById("valorInicial").value) || 0;
+  let final = parseFloat(document.getElementById("valorFinal").value) || 0;
+
+  let resultado = final - inicial;
+
+  let min = Math.floor(segundos / 60);
+  let sec = segundos % 60;
+
+  let texto = "";
+
+  if (resultado > 0) {
+    texto = `🟢 Em ${min}m ${sec}s você GANHOU R$ ${resultado.toFixed(2)}`;
+    resumo.style.color = "green";
+  } else if (resultado < 0) {
+    texto = `🔴 Em ${min}m ${sec}s você PERDEU R$ ${Math.abs(resultado).toFixed(2)}`;
+    resumo.style.color = "red";
+  } else {
+    texto = `⚪ Em ${min}m ${sec}s você EMPATOU`;
+    resumo.style.color = "black";
+  }
+
+  resumo.innerText = texto;
+
+  // 🔥 zera e pausa
+  segundos = 0;
+  pausado = true;
+  iniciou = false;
+
+  document.getElementById("tempo").innerText = "Tempo de jogo: 00:00";
+}
+
+/* RESET */
+function resetarTudo() {
+  segundos = 0;
+  pausado = true;
+  iniciou = false;
+
+  document.getElementById("tempo").innerText = "Tempo de jogo: 00:00";
+
+  document.getElementById("forma").innerText = "-";
+  document.getElementById("forma").className = "forma";
+
+  document.getElementById("valorInicial").value = "";
+  document.getElementById("valorFinal").value = "";
+  document.getElementById("resumo").innerText = "";
+
+  sorteando = false;
+}
+
+/* SERVICE WORKER */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+/* LONG PRESS */
+const botao = document.querySelector(".btn");
+
+let tempoPressionado = null;
+let segurando = false;
+
+botao.addEventListener("pointerdown", () => {
+  segurando = false;
+  botao.classList.add("segurar");
+
+  tempoPressionado = setTimeout(() => {
+    segurando = true;
+    resetarTudo();
+  }, 2000);
+});
+
+botao.addEventListener("pointerup", () => {
+  clearTimeout(tempoPressionado);
+  botao.classList.remove("segurar");
+
+  if (!segurando) {
+    sortear();
+  }
+});
+
+botao.addEventListener("pointerleave", () => {
+  clearTimeout(tempoPressionado);
+  botao.classList.remove("segurar");
+});
+</script>
+
+</body>
+</html>
