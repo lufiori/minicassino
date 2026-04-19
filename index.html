@@ -3,128 +3,214 @@
 <head>
 <link rel="manifest" href="manifest.json">
 <meta charset="UTF-8">
-<title>Roleta Cassino</title>
+<title>Cassino</title>
 
 <style>
 body {
   font-family: Arial;
   text-align: center;
+  margin: 0;
   background: radial-gradient(circle, #0b3d2e, #06251c);
   color: white;
-  padding-bottom: 260px;
 }
 
-h1 {
-  font-size: 70px;
-}
-
-/* BOLINHA CENTRAL */
-#container {
-  margin-top: 150px;
+/* MENU */
+.menu {
   display: flex;
-  justify-content: center;
 }
 
+.menu button {
+  flex: 1;
+  padding: 25px;
+  font-size: 35px;
+  border: none;
+  background: #222;
+  color: white;
+}
+
+.menu button.ativo {
+  background: gold;
+  color: black;
+}
+
+/* TELAS */
+.tela { display: none; padding-bottom: 200px; }
+.ativa { display: block; }
+
+/* BOLA ROLETA */
 .bola {
-  width: 550px;
-  height: 550px;
+  width: 500px;
+  height: 500px;
   border-radius: 50%;
+  margin: 80px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 220px;
+  font-weight: bold;
+}
+
+/* TOP CARD */
+.forma {
+  width: 400px;
+  height: 400px;
+  margin: 80px auto;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 250px;
   font-weight: bold;
-  color: white;
+  border-radius: 40px;
 }
 
 /* CORES */
-.vermelho {
-  background: red;
+.vermelho { background: radial-gradient(circle, #f96868, #b30000); }
+.preto { background: radial-gradient(circle, #686868, #000); }
+.par { background: blue; }
+.impar { background: green; }
+
+/* BRILHO */
+.brilho {
+  animation: brilhoPulse 0.8s ease-in-out 3;
+}
+@keyframes brilhoPulse {
+  0% { box-shadow: 0 0 10px rgba(255,255,255,0.3); }
+  50% { box-shadow: 0 0 60px rgba(255,255,255,0.9); }
+  100% { box-shadow: 0 0 10px rgba(255,255,255,0.3); }
 }
 
-.preto {
-  background: black;
-  border: 3px solid white;
+/* TEMPO */
+.tempo {
+  font-size: 50px;
+  margin-top: 20px;
 }
 
-/* BOTÃO GIGANTE */
+/* CONTROLES */
+.controles {
+  margin-top: 30px;
+  font-size: 35px;
+}
+
+input {
+  width: 150px;
+  padding: 10px;
+  font-size: 25px;
+  margin: 10px;
+}
+
+#resumoTop, #resumoRoleta {
+  margin-top: 20px;
+  font-size: 40px;
+}
+
+/* BOTÃO */
 .btn {
   position: fixed;
   bottom: 0;
-  left: 0;
   width: 100%;
-  height: 550px;
-
-  font-size: 90px;
-  font-weight: bold;
-
+  height: 250px;
+  font-size: 60px;
   border: none;
   background: gold;
-  cursor: pointer;
 }
 
-.btn:active {
-  background: #d4af37;
-}
+.btn.segurar { background: red !important; }
 </style>
 </head>
 
 <body>
 
-<h1>🎡 Sorteio Roleta</h1>
-
-<div id="container">
-  <div id="bola" class="bola">-</div>
+<div class="menu">
+  <button id="btnTop" class="ativo" onclick="trocar('top')">🃏 Top Card</button>
+  <button id="btnRoleta" onclick="trocar('roleta')">🎡 Roleta</button>
 </div>
 
-<button class="btn" onclick="girar()">GIRAR 🎰</button>
+<!-- TOP CARD -->
+<div id="top" class="tela ativa">
+  <div id="forma" class="forma">-</div>
+  <div class="tempo" id="tempoTop">Tempo: 00:00</div>
+
+  <div class="controles">
+    💰 <input id="iniTop" placeholder="Inicial">
+    💰 <input id="fimTop" placeholder="Final"><br>
+    <button onclick="encerrarTop()">Encerrar</button>
+  </div>
+
+  <div id="resumoTop"></div>
+
+  <button class="btn" id="btnTopCard">SORTear</button>
+</div>
+
+<!-- ROLETA -->
+<div id="roleta" class="tela">
+  <div id="bola" class="bola">-</div>
+  <div class="tempo" id="tempoRoleta">Tempo: 00:00</div>
+
+  <div class="controles">
+    💰 <input id="iniR" placeholder="Inicial">
+    💰 <input id="fimR" placeholder="Final"><br>
+    <button onclick="encerrarRoleta()">Encerrar</button>
+  </div>
+
+  <div id="resumoRoleta"></div>
+
+  <button class="btn" id="btnRoletaGirar">GIRAR 🎰</button>
+</div>
 
 <script>
-let girando = false;
 
-const vermelhos = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
-
-function cor(num) {
-  return vermelhos.includes(num) ? "vermelho" : "preto";
+/* TROCA */
+function trocar(t) {
+  document.querySelectorAll(".tela").forEach(e => e.classList.remove("ativa"));
+  document.getElementById(t).classList.add("ativa");
 }
 
-function girar() {
-  if (girando) return;
-  girando = true;
+/* -------- TOP CARD -------- */
+let segTop=0, rodandoTop=false;
 
-  let bola = document.getElementById("bola");
-  let final = Math.floor(Math.random() * 36) + 1;
+function sortearTop(){
+  rodandoTop=true;
+  let f=document.getElementById("forma");
+  let n=Math.floor(Math.random()*36)+1;
 
-  let tempo = 0;
+  f.innerText=n;
+  f.className="forma "+(n%2?"impar":"par");
 
-  let intervalo = setInterval(() => {
-    let temp = Math.floor(Math.random() * 36) + 1;
-
-    bola.innerText = temp;
-    bola.className = "bola " + cor(temp);
-
-    tempo++;
-
-    if (tempo > 20) {
-      clearInterval(intervalo);
-
-      bola.innerText = final;
-      bola.className = "bola " + cor(final);
-
-      girando = false;
-    }
-
-  }, 60);
+  f.classList.add("brilho");
+  setTimeout(()=>f.classList.remove("brilho"),2000);
 }
 
-
-
-/* SERVICE WORKER */
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+function encerrarTop(){
+  let ini=+iniTop.value||0, fim=+fimTop.value||0;
+  let r=fim-ini;
+  resumoTop.innerText=r>=0?`Ganhou ${r}`:`Perdeu ${-r}`;
+  segTop=0;
 }
 
+/* -------- ROLETA -------- */
+let segR=0;
 
+function girar(){
+  let b=document.getElementById("bola");
+  let n=Math.floor(Math.random()*36)+1;
+
+  b.innerText=n;
+  b.className="bola "+([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(n)?"vermelho":"preto");
+
+  b.classList.add("brilho");
+  setTimeout(()=>b.classList.remove("brilho"),2000);
+}
+
+function encerrarRoleta(){
+  let ini=+iniR.value||0, fim=+fimR.value||0;
+  let r=fim-ini;
+  resumoRoleta.innerText=r>=0?`Ganhou ${r}`:`Perdeu ${-r}`;
+  segR=0;
+}
+
+/* BOTÕES */
+document.getElementById("btnTopCard").onclick=sortearTop;
+document.getElementById("btnRoletaGirar").onclick=girar;
 
 </script>
 
